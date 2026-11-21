@@ -1,0 +1,702 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Owner Menu</title>
+    <link rel="stylesheet" href="{% static 'css/ownerMenu.css' %}" />
+    <script src="https://www.paypal.com/sdk/js?client-id=Af4FCd3YluVw37dLDsenTDmZZO2cohxSSGxX5mitiJaydoFVnY4R1TNgKg5Rl1W-9LidSM3KMHzyIo07&currency=PHP"></script>
+  </head>
+
+  <body>
+    <div class="page">
+      <nav class="topbar">
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="logout-btn">Logout</button>
+        </form>
+
+        <div class="nav-center">
+          <a href="{% url 'owner_home' %}">Home Page</a>
+          <a href="#" class="active">Menu</a>
+          <a href="{% url 'owner_staff' %}">Staff</a>
+          <a href="{% url 'owner_inventory' %}">Inventory</a>
+        </div>
+      </nav>
+
+      <div class="main-content" id="mainContent">
+        <section class="menu-panel">
+          <div class="menu-top">
+            <div class="search-box">
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Search menu..."
+              />
+              <span class="search-icon">⌕</span>
+            </div>
+
+            <button type="button" class="add-btn" id="openAdd">+</button>
+            <button type="button" class="edit-top-btn" id="openEdit">✎</button>
+            <button type="button" class="remove-top-btn" id="openRemove">
+              −
+            </button>
+          </div>
+
+          <div class="add-menu-card" id="addCard">
+            <form method="post" action="{% url 'add_menu' %}" id="addMenuForm">
+              {% csrf_token %}
+              <input
+                type="text"
+                name="menu_name"
+                placeholder="Menu name"
+                required
+              />
+              <input
+                type="number"
+                name="menu_price"
+                placeholder="Price"
+                min="0"
+                required
+              />
+
+              <div id="ingredientRows">
+                <div class="ingredient-row">
+                  <select name="item_ids[]" required>
+                    <option value="">Select ingredient</option>
+                    {% for ingredient in items %}
+                    <option value="{{ ingredient.id }}">
+                      {{ ingredient.name }}
+                    </option>
+                    {% endfor %}
+                  </select>
+
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    name="quantities[]"
+                    placeholder="Qty"
+                    required
+                  />
+
+                  <button type="button" class="remove-row-btn">×</button>
+                </div>
+              </div>
+
+              <button type="button" id="addRowBtn">Add Ingredient</button>
+
+              <div class="add-actions">
+                <button type="button" id="cancelAdd">Cancel</button>
+                <button type="submit">Save</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="edit-menu-card" id="editCard">
+            <form method="post" action="{% url 'edit_menu' %}">
+              {% csrf_token %}
+              <select name="menu_id" id="editSelect" required>
+                <option value="">Select menu</option>
+                {% for item in menus %}
+                <option value="{{ item.id }}" data-price="{{ item.price }}">
+                  {{ item.name }}
+                </option>
+                {% endfor %}
+              </select>
+
+              <input
+                type="number"
+                name="menu_price"
+                id="editPrice"
+                placeholder="New price"
+                min="0"
+                required
+              />
+
+              <div class="add-actions">
+                <button type="button" id="cancelEdit">Cancel</button>
+                <button type="submit">Save</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="remove-menu-card" id="removeCard">
+            <form method="post" id="removeMenuForm">
+              {% csrf_token %}
+              <select id="removeSelect" required>
+                <option value="">Select menu</option>
+                {% for item in menus %}
+                <option value="{% url 'remove_menu' item.id %}">
+                  {{ item.name }}
+                </option>
+                {% endfor %}
+              </select>
+
+              <div class="add-actions">
+                <button type="button" id="cancelRemove">Cancel</button>
+                <button type="submit">Remove</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="menu-grid" id="menuGrid">
+            {% for item in menus %}
+            <button
+              type="button"
+              class="menu-card {{ item.stock_status }}"
+              data-id="{{ item.id }}"
+              data-name="{{ item.name }}"
+              data-price="{{ item.price }}"
+              data-status="{{ item.stock_status }}"
+              data-message="{{ item.stock_message }}"
+            >
+              <div class="menu-image"></div>
+              <p class="menu-name">{{ item.name }}</p>
+              <p class="menu-price">₱{{ item.price }}</p>
+            </button>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="cart-panel">
+          <h2>CART</h2>
+
+          <div class="divider"></div>
+
+          <div class="cart-items" id="cartItems">
+            <p class="empty-cart">No items yet.</p>
+          </div>
+
+          <div class="cart-footer">
+            <div class="total-row">
+              <span>Total:</span>
+              <span id="cartTotal">₱0</span>
+            </div>
+
+            <button type="button" class="checkout-btn" id="checkoutBtn">
+              Checkout
+            </button>
+          </div>
+        </section>
+
+        <section class="payment-panel" id="paymentPanel">
+          <h2>PAYMENT</h2>
+
+          <div class="divider"></div>
+
+          <div class="payment-section">
+            <p class="label">Payment Method</p>
+
+            <label>
+              <input type="radio" name="payment_method" value="Cash" checked />
+              Cash
+            </label>
+
+            <label>
+              <input type="radio" name="payment_method" value="PayPal" />
+              PayPal
+            </label>
+          </div>
+
+          <div class="divider section-divider"></div>
+
+          <div class="payment-row">
+            <span>Cash Given</span>
+            <input type="number" id="cashGiven" min="0" />
+          </div>
+
+          <div class="payment-row">
+            <span>Change</span>
+            <span id="changeValue">₱0</span>
+          </div>
+
+          <div class="divider section-divider"></div>
+
+          <button type="button" class="confirm-btn" id="confirmBtn">
+            Confirm Payment
+          </button>
+
+          <div id="paypal-button-container"></div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const cart = [];
+
+      const searchInput = document.getElementById("searchInput");
+      const menuGrid = document.getElementById("menuGrid");
+      const cards = document.querySelectorAll(".menu-card");
+
+      const openAdd = document.getElementById("openAdd");
+      const openEdit = document.getElementById("openEdit");
+      const openRemove = document.getElementById("openRemove");
+
+      const addCard = document.getElementById("addCard");
+      const editCard = document.getElementById("editCard");
+      const removeCard = document.getElementById("removeCard");
+
+      const cancelAdd = document.getElementById("cancelAdd");
+      const cancelEdit = document.getElementById("cancelEdit");
+      const cancelRemove = document.getElementById("cancelRemove");
+
+      const addRowBtn = document.getElementById("addRowBtn");
+      const ingredientRows = document.getElementById("ingredientRows");
+
+      const editSelect = document.getElementById("editSelect");
+      const editPrice = document.getElementById("editPrice");
+
+      const removeMenuForm = document.getElementById("removeMenuForm");
+      const removeSelect = document.getElementById("removeSelect");
+
+      const cartItems = document.getElementById("cartItems");
+      const cartTotal = document.getElementById("cartTotal");
+      const checkoutBtn = document.getElementById("checkoutBtn");
+      const paymentPanel = document.getElementById("paymentPanel");
+      const mainContent = document.getElementById("mainContent");
+      const cashGiven = document.getElementById("cashGiven");
+      const changeValue = document.getElementById("changeValue");
+      const confirmBtn = document.getElementById("confirmBtn");
+
+      const ingredientOptions = `
+        <option value="">Select ingredient</option>
+        {% for ingredient in items %}
+        <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
+        {% endfor %}
+      `;
+
+      function getCookie(name) {
+        let cookieValue = null;
+
+        if (document.cookie && document.cookie !== "") {
+          const cookies = document.cookie.split(";");
+
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+
+            if (cookie.substring(0, name.length + 1) === name + "=") {
+              cookieValue = decodeURIComponent(
+                cookie.substring(name.length + 1),
+              );
+              break;
+            }
+          }
+        }
+
+        return cookieValue;
+      }
+
+      function formatPeso(value) {
+        return "₱" + value;
+      }
+
+      function getTotal() {
+        return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      }
+
+      function computeChange() {
+        const total = getTotal();
+        const cash = parseInt(cashGiven.value) || 0;
+        const method = document.querySelector(
+          'input[name="payment_method"]:checked',
+        ).value;
+
+        if (method !== "Cash") {
+          changeValue.textContent = "₱0";
+          return;
+        }
+
+        const change = cash - total;
+        changeValue.textContent = formatPeso(change > 0 ? change : 0);
+      }
+
+      function renderCart() {
+        if (cart.length === 0) {
+          cartItems.innerHTML = '<p class="empty-cart">No items yet.</p>';
+          cartTotal.textContent = "₱0";
+          paymentPanel.classList.remove("show");
+          paymentPanel.classList.remove("paypal-active");
+          mainContent.classList.remove("show-payment");
+          changeValue.textContent = "₱0";
+          cashGiven.value = "";
+          cashGiven.disabled = false;
+          document.querySelector(
+            'input[name="payment_method"][value="Cash"]',
+          ).checked = true;
+          return;
+        }
+
+        let html = "";
+
+        cart.forEach((item, index) => {
+          html += `
+            <div class="cart-item">
+              <div class="cart-top">
+                <p class="cart-name">${item.name}</p>
+                <button
+                  type="button"
+                  class="remove-item-btn"
+                  onclick="removeItem(${index})"
+                >
+                  ×
+                </button>
+                <p class="cart-price">${formatPeso(item.price * item.quantity)}</p>
+              </div>
+
+              <div class="qty-controls">
+                <button type="button" onclick="decreaseQty(${index})">−</button>
+                <span class="qty-number">${item.quantity}</span>
+                <button type="button" onclick="increaseQty(${index})">+</button>
+              </div>
+            </div>
+          `;
+        });
+
+        cartItems.innerHTML = html;
+        cartTotal.textContent = formatPeso(getTotal());
+        computeChange();
+      }
+
+      function addToCart(id, name, price) {
+        const existing = cart.find((item) => item.id === id);
+
+        if (existing) {
+          existing.quantity += 1;
+        } else {
+          cart.push({
+            id: id,
+            name: name,
+            price: price,
+            quantity: 1,
+          });
+        }
+
+        renderCart();
+      }
+
+      function resetPOS() {
+        cart.length = 0;
+        renderCart();
+
+        searchInput.value = "";
+
+        const cards = menuGrid.querySelectorAll(".menu-card");
+        cards.forEach((card) => {
+          card.style.display = "block";
+        });
+
+        document.querySelector(
+          'input[name="payment_method"][value="Cash"]',
+        ).checked = true;
+
+        cashGiven.disabled = false;
+        cashGiven.value = "";
+        changeValue.textContent = "₱0";
+        paymentPanel.classList.remove("paypal-active");
+      }
+
+      window.increaseQty = function (index) {
+        cart[index].quantity += 1;
+        renderCart();
+      };
+
+      window.decreaseQty = function (index) {
+        cart[index].quantity -= 1;
+
+        if (cart[index].quantity <= 0) {
+          cart.splice(index, 1);
+        }
+
+        renderCart();
+      };
+
+      window.removeItem = function (index) {
+        cart.splice(index, 1);
+        renderCart();
+      };
+
+      openAdd.addEventListener("click", function () {
+        addCard.classList.toggle("show");
+        editCard.classList.remove("show");
+        removeCard.classList.remove("show");
+      });
+
+      openEdit.addEventListener("click", function () {
+        editCard.classList.toggle("show");
+        addCard.classList.remove("show");
+        removeCard.classList.remove("show");
+      });
+
+      openRemove.addEventListener("click", function () {
+        removeCard.classList.toggle("show");
+        addCard.classList.remove("show");
+        editCard.classList.remove("show");
+      });
+
+      cancelAdd.addEventListener("click", function () {
+        addCard.classList.remove("show");
+      });
+
+      cancelEdit.addEventListener("click", function () {
+        editCard.classList.remove("show");
+      });
+
+      cancelRemove.addEventListener("click", function () {
+        removeCard.classList.remove("show");
+      });
+
+      addRowBtn.addEventListener("click", function () {
+        const row = document.createElement("div");
+        row.className = "ingredient-row";
+        row.innerHTML = `
+          <select name="item_ids[]" required>
+            ${ingredientOptions}
+          </select>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            name="quantities[]"
+            placeholder="Qty"
+            required
+          />
+          <button type="button" class="remove-row-btn">×</button>
+        `;
+        ingredientRows.appendChild(row);
+      });
+
+      ingredientRows.addEventListener("click", function (e) {
+        if (e.target.classList.contains("remove-row-btn")) {
+          const rows = ingredientRows.querySelectorAll(".ingredient-row");
+          if (rows.length > 1) {
+            e.target.closest(".ingredient-row").remove();
+          }
+        }
+      });
+
+      editSelect.addEventListener("change", function () {
+        const selected = this.options[this.selectedIndex];
+        editPrice.value = selected.dataset.price || "";
+      });
+
+      removeMenuForm.addEventListener("submit", function (e) {
+        const url = removeSelect.value;
+
+        if (!url) {
+          e.preventDefault();
+          return;
+        }
+
+        if (!confirm("Remove this menu?")) {
+          e.preventDefault();
+          return;
+        }
+
+        removeMenuForm.action = url;
+      });
+
+      searchInput.addEventListener("input", function () {
+        const keyword = this.value.toLowerCase();
+
+        cards.forEach((card) => {
+          const name = card.dataset.name.toLowerCase();
+          card.style.display = name.includes(keyword) ? "block" : "none";
+        });
+      });
+
+      document.querySelectorAll(".menu-card").forEach((card) => {
+        card.addEventListener("click", function () {
+          const status = this.dataset.status;
+          const message = this.dataset.message;
+          const id = this.dataset.id;
+          const name = this.dataset.name;
+          const price = parseInt(this.dataset.price);
+
+          if (status === "not_enough") {
+            alert(message);
+            return;
+          }
+
+          if (status === "low") {
+            alert(message);
+          }
+
+          addToCart(id, name, price);
+        });
+      });
+
+      checkoutBtn.addEventListener("click", function () {
+        if (cart.length === 0) {
+          alert("Cart is empty.");
+          return;
+        }
+
+        paymentPanel.classList.add("show");
+        mainContent.classList.add("show-payment");
+        computeChange();
+      });
+
+      cashGiven.addEventListener("input", computeChange);
+
+      document
+        .querySelectorAll('input[name="payment_method"]')
+        .forEach((radio) => {
+          radio.addEventListener("change", function () {
+            if (this.value === "PayPal") {
+              cashGiven.value = "";
+              cashGiven.disabled = true;
+              paymentPanel.classList.add("paypal-active");
+            } else {
+              cashGiven.disabled = false;
+              paymentPanel.classList.remove("paypal-active");
+            }
+
+            computeChange();
+          });
+        });
+
+      confirmBtn.addEventListener("click", function () {
+        if (cart.length === 0) {
+          alert("Cart is empty.");
+          return;
+        }
+
+        const method = document.querySelector(
+          'input[name="payment_method"]:checked',
+        ).value;
+
+        const total = getTotal();
+        const cash = parseInt(cashGiven.value) || 0;
+        const change = method === "Cash" ? Math.max(cash - total, 0) : null;
+
+        if (method === "PayPal") {
+          alert("Use the PayPal button below to complete payment.");
+          return;
+        }
+
+        if (method === "Cash" && cash < total) {
+          alert("Cash is not enough.");
+          return;
+        }
+
+        fetch("{% url 'save_sale' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify({
+            cart: cart,
+            payment_method: method,
+            cash: cash,
+            change: change,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              alert("Payment confirmed.");
+              resetPOS();
+            } else {
+              alert(data.message || "Transaction failed.");
+            }
+          })
+          .catch((error) => {
+            console.error("Cash payment error:", error);
+            alert("Transaction failed.");
+          });
+      });
+
+      paypal
+        .Buttons({
+          style: {
+            color: "gold",
+            shape: "rect",
+            label: "pay",
+            height: 42,
+          },
+
+          createOrder: function () {
+            if (cart.length === 0) {
+              alert("Cart is empty.");
+              return Promise.reject(new Error("Cart is empty."));
+            }
+
+            return fetch("{% url 'paypal_create_order' %}", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+              },
+              body: JSON.stringify({
+                cart: cart,
+              }),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                console.log("PayPal create-order response:", data);
+
+                if (!data.id) {
+                  alert(data.message || "Failed to create PayPal order.");
+                  console.error("PayPal create-order full response:", data);
+                  return Promise.reject(
+                    new Error(data.message || "No order ID returned."),
+                  );
+                }
+
+                return data.id;
+              });
+          },
+
+          onApprove: function (data) {
+            return fetch("{% url 'paypal_capture_order' %}", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+              },
+              body: JSON.stringify({
+                orderID: data.orderID,
+                cart: cart,
+              }),
+            })
+              .then((response) => response.json())
+              .then((details) => {
+                console.log("PayPal capture response:", details);
+
+                if (details.status === "COMPLETED" || details.success) {
+                  alert("PayPal payment successful.");
+                  resetPOS();
+                } else {
+                  alert(details.message || "Payment failed.");
+                }
+              });
+          },
+
+          onCancel: function () {
+            alert("PayPal payment was cancelled.");
+          },
+
+          onError: function (err) {
+            console.error("PayPal error:", err);
+            alert("PayPal error. Check F12 Console and Network.");
+          },
+        })
+        .render("#paypal-button-container");
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const selected = document.querySelector(
+          'input[name="payment_method"]:checked',
+        );
+
+        if (selected && selected.value === "PayPal") {
+          paymentPanel.classList.add("paypal-active");
+        } else {
+          paymentPanel.classList.remove("paypal-active");
+        }
+      });
+    </script>
+  </body>
+</html>

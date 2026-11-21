@@ -1,0 +1,240 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mr. Bean Inventory</title>
+    <link rel="stylesheet" href="{% static 'css/ownerInventory.css' %}" />
+  </head>
+
+  <body>
+    <div class="page">
+      <nav class="topbar">
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="logout-btn">Logout</button>
+        </form>
+
+        <div class="nav-center">
+          <a href="{% url 'owner_home' %}">Home Page</a>
+          <a href="{% url 'owner_menu' %}">Menu</a>
+          <a href="{% url 'owner_staff' %}">Staff</a>
+          <a href="{% url 'owner_inventory' %}" class="active">Inventory</a>
+        </div>
+      </nav>
+
+      <div class="main-content">
+        <section class="inventory-panel">
+          <div class="menu-top">
+            <div class="search-box">
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Search inventory..."
+              />
+              <span class="search-icon">⌕</span>
+            </div>
+
+            <button type="button" class="add-btn" id="openAdd">+</button>
+            <button type="button" class="edit-top-btn" id="openEdit">✎</button>
+            <button type="button" class="remove-top-btn" id="openRemove">
+              ×
+            </button>
+          </div>
+
+          <div class="add-menu-card" id="addCard">
+            <form method="post" action="{% url 'add_inventory' %}">
+              {% csrf_token %}
+
+              <input
+                type="text"
+                name="name"
+                placeholder="Inventory name"
+                required
+              />
+
+              <input
+                type="text"
+                name="unit"
+                placeholder="Unit (pcs, ml, g)"
+                required
+              />
+
+              <input
+                type="number"
+                step="0.01"
+                name="quantity"
+                placeholder="Quantity"
+                required
+              />
+
+              <input
+                type="text"
+                name="description"
+                placeholder="Description (optional)"
+              />
+
+              <div class="add-actions">
+                <button type="button" id="cancelAdd">Cancel</button>
+                <button type="submit">Save</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="edit-menu-card" id="editCard">
+            <form method="post" action="{% url 'edit_inventory' %}">
+              {% csrf_token %}
+
+              <select name="item_id" id="editSelect" required>
+                <option value="">Select item</option>
+                {% for item in items_for_edit %}
+                <option
+                  value="{{ item.id }}"
+                  data-name="{{ item.name }}"
+                  data-qty="{{ item.quantity }}"
+                >
+                  {{ item.name }}
+                </option>
+                {% endfor %}
+              </select>
+
+              <input
+                type="text"
+                name="name"
+                id="editName"
+                placeholder="Item name"
+                required
+              />
+
+              <input
+                type="number"
+                step="0.01"
+                name="quantity"
+                id="editQty"
+                placeholder="Quantity"
+                required
+              />
+
+              <div class="add-actions">
+                <button type="button" id="cancelEdit">Cancel</button>
+                <button type="submit">Save Changes</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="remove-menu-card" id="removeCard">
+            <form id="removeForm" method="post">
+              {% csrf_token %}
+
+              <select id="removeSelect" required>
+                <option value="">Select item</option>
+                {% for inv in inventories %}
+                <option value="{% url 'remove_inventory' inv.id %}">
+                  {{ inv.item.name }}
+                </option>
+                {% endfor %}
+              </select>
+
+              <div class="add-actions">
+                <button type="button" id="cancelRemove">Cancel</button>
+                <button type="submit">Remove</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="inventory-grid" id="inventoryGrid">
+            {% for inv in inventories %}
+            <div class="inventory-card" data-name="{{ inv.item.name }}">
+              <div class="inventory-image"></div>
+              <p class="inventory-name">{{ inv.item.name }}</p>
+              <p class="inventory-quantity">
+                {{ inv.quantity }} {{ inv.item.unit }}
+              </p>
+            </div>
+            {% empty %}
+            <p class="empty-message">No inventory items found.</p>
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const addBtn = document.getElementById("openAdd");
+      const editBtn = document.getElementById("openEdit");
+      const removeBtn = document.getElementById("openRemove");
+
+      const addCard = document.getElementById("addCard");
+      const editCard = document.getElementById("editCard");
+      const removeCard = document.getElementById("removeCard");
+
+      const cancelAdd = document.getElementById("cancelAdd");
+      const cancelEdit = document.getElementById("cancelEdit");
+      const cancelRemove = document.getElementById("cancelRemove");
+
+      const editSelect = document.getElementById("editSelect");
+      const editName = document.getElementById("editName");
+      const editQty = document.getElementById("editQty");
+
+      const removeForm = document.getElementById("removeForm");
+      const removeSelect = document.getElementById("removeSelect");
+
+      addBtn.onclick = () => {
+        addCard.classList.toggle("show");
+        editCard.classList.remove("show");
+        removeCard.classList.remove("show");
+      };
+
+      editBtn.onclick = () => {
+        editCard.classList.toggle("show");
+        addCard.classList.remove("show");
+        removeCard.classList.remove("show");
+      };
+
+      removeBtn.onclick = () => {
+        removeCard.classList.toggle("show");
+        addCard.classList.remove("show");
+        editCard.classList.remove("show");
+      };
+
+      cancelAdd.onclick = () => addCard.classList.remove("show");
+      cancelEdit.onclick = () => editCard.classList.remove("show");
+      cancelRemove.onclick = () => removeCard.classList.remove("show");
+
+      editSelect.addEventListener("change", function () {
+        const selected = this.options[this.selectedIndex];
+        editName.value = selected.dataset.name || "";
+        editQty.value = selected.dataset.qty || "";
+      });
+
+      removeForm.addEventListener("submit", function (e) {
+        const url = removeSelect.value;
+
+        if (!url) {
+          e.preventDefault();
+          return;
+        }
+
+        if (!confirm("Remove this inventory item completely?")) {
+          e.preventDefault();
+          return;
+        }
+
+        removeForm.action = url;
+      });
+
+      const searchInput = document.getElementById("searchInput");
+      const cards = document.querySelectorAll(".inventory-card");
+
+      searchInput.addEventListener("input", function () {
+        const keyword = this.value.toLowerCase();
+
+        cards.forEach((card) => {
+          const name = card.dataset.name.toLowerCase();
+          card.style.display = name.includes(keyword) ? "block" : "none";
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,128 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Management Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="{% static 'management/managementDashboard.css' %}"
+    />
+  </head>
+  <body>
+    <div class="page">
+      <aside class="sidebar">
+        <div class="brand">Mr. Bean</div>
+
+        <nav class="sidebar-nav">
+          <a href="{% url 'management_dashboard' %}" class="active"
+            >Dashboard</a
+          >
+          <a href="{% url 'management_users' %}">Users</a>
+          <a href="{% url 'management_menu' %}">Menu</a>
+          <a href="{% url 'management_inventory' %}">Inventory</a>
+          <a href="{% url 'management_sales' %}">Sales</a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <h1>Management Dashboard</h1>
+            <p>Overview of users, menu, inventory, and sales</p>
+          </div>
+
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">Logout</button>
+          </form>
+        </header>
+
+        <section class="stats-grid">
+          <div class="stat-card">
+            <h2>Total Users</h2>
+            <p>{{ total_users }}</p>
+          </div>
+
+          <div class="stat-card">
+            <h2>Owners</h2>
+            <p>{{ total_owners }}</p>
+          </div>
+
+          <div class="stat-card">
+            <h2>Cashiers</h2>
+            <p>{{ total_cashiers }}</p>
+          </div>
+
+          <div class="stat-card">
+            <h2>Menu Items</h2>
+            <p>{{ total_menu_items }}</p>
+          </div>
+
+          <div class="stat-card">
+            <h2>Inventory Items</h2>
+            <p>{{ total_inventory_items }}</p>
+          </div>
+
+          <div class="stat-card">
+            <h2>Sales Today</h2>
+            <p>₱{{ sales_today }}</p>
+          </div>
+        </section>
+
+        <section class="content-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Quick Actions</h3>
+            </div>
+
+            <div class="action-grid">
+              <a href="{% url 'management_users' %}" class="action-card">
+                <span>Manage Users</span>
+              </a>
+
+              <a href="{% url 'management_menu' %}" class="action-card">
+                <span>Manage Menu</span>
+              </a>
+
+              <a href="{% url 'management_inventory' %}" class="action-card">
+                <span>Manage Inventory</span>
+              </a>
+
+              <a href="{% url 'management_sales' %}" class="action-card">
+                <span>View Sales</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h3>System Notes</h3>
+            </div>
+
+            <div class="notes-list">
+              <div class="note-item">
+                <strong>Users:</strong> Monitor owner and cashier access here.
+              </div>
+
+              <div class="note-item">
+                <strong>Menu:</strong> Add, update, and review available drinks.
+              </div>
+
+              <div class="note-item">
+                <strong>Inventory:</strong> Track stock levels and item
+                availability.
+              </div>
+
+              <div class="note-item">
+                <strong>Sales:</strong> Check daily transactions and sales
+                summary.
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

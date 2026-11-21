@@ -1,0 +1,211 @@
+body {
+  margin: 0;
+  background: #d9d9dd;
+  font-family: Georgia, serif;
+  color: #442315;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.page {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  margin: 0;
+  background: #f7f4ea;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 64px;
+  background: #f2c48f;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #9d8b75;
+  padding: 0 30px;
+  flex-shrink: 0;
+}
+
+.topbar form {
+  margin: 0;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #442315;
+  font-size: 1.05rem;
+  font-family: Georgia, serif;
+}
+
+.nav-center {
+  display: flex;
+  align-items: center;
+  gap: 70px;
+}
+
+.nav-center a {
+  text-decoration: none;
+  color: #442315;
+  font-size: 1.1rem;
+  transition: opacity 0.2s ease;
+}
+
+.nav-center a:hover,
+.nav-center a.active {
+  opacity: 0.7;
+}
+
+.dashboard-layout {
+  flex: 1;
+  min-height: 0;
+  padding: 20px 28px 24px;
+  display: grid;
+  grid-template-columns: 2fr 1.25fr 1.25fr;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-card,
+.stat-card {
+  background: #f2c48f;
+  border-radius: 16px;
+}
+
+.chart-card {
+  grid-column: 1 / 2;
+  grid-row: 1 / 5;
+  padding: 22px 22px 18px;
+}
+
+.chart-card h2 {
+  margin: 0 0 24px;
+  font-size: 2rem;
+  font-weight: normal;
+}
+
+.donut-wrap {
+  position: relative;
+  width: 100%;
+  height: 460px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-chart {
+  width: 290px;
+  height: 290px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 22px 28px;
+}
+
+.stat-card h3 {
+  margin: 0 0 18px;
+  font-size: 1.6rem;
+  font-weight: normal;
+  text-align: center;
+}
+
+.stat-card p {
+  margin: 0;
+  font-size: 2.55rem;
+  text-align: center;
+}
+
+.total-sales-card {
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+}
+
+.orders-card {
+  grid-column: 3 / 4;
+  grid-row: 2 / 3;
+}
+
+.top-item-card {
+  grid-column: 2 / 3;
+  grid-row: 3 / 4;
+}
+
+.arrow-btn {
+  border: none;
+  background: none;
+  color: #ef8f39;
+  font-size: 3rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  text-decoration: none;
+}
+
+.right-arrow {
+  position: absolute;
+  right: 8px;
+  bottom: 2px;
+}
+
+.sales-layout {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  padding: 18px 18px 24px;
+  overflow: hidden;
+}
+
+@media (max-width: 1100px) {
+  body {
+    overflow: auto;
+  }
+
+  .page {
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    overflow: auto;
+  }
+
+  .chart-card,
+  .total-sales-card,
+  .orders-card,
+  .top-item-card {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    height: auto;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .nav-center {
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

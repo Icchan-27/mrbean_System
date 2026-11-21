@@ -1,0 +1,80 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sales History</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard2.css' %}" />
+  </head>
+  <body>
+    <div class="page">
+      <nav class="topbar">
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="logout-btn">Logout</button>
+        </form>
+
+        <div class="nav-center">
+          <a href="{% url 'menu_page' %}">Menu</a>
+          <a href="{% url 'dashboard_page' %}" class="active">Sales</a>
+          <a href="{% url 'staff_inventory' %}">Inventory</a>
+        </div>
+      </nav>
+
+      <main class="history-layout">
+        <section class="history-card">
+          <div class="history-top">
+            <h2>Transaction History</h2>
+
+            <div class="history-actions">
+              <span class="today-label">Today: {{ today }}</span>
+            </div>
+          </div>
+
+          <div class="table-shell">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Date / Time</th>
+                  <th>Order #</th>
+                  <th>Order Details</th>
+                  <th>Total</th>
+                  <th>Payment</th>
+                </tr>
+              </thead>
+            </table>
+
+            <div class="table-body-scroll">
+              <table class="history-table">
+                <tbody>
+                  {% for transaction in transactions %}
+                  <tr>
+                    <td>{{ transaction.date_time|date:"M d, g:i A" }}</td>
+                    <td>#{{ transaction.order_number }}</td>
+                    <td class="details-cell">
+                      {% for item in transaction.order_details %}
+                      <span>{{ item }}</span>
+                      {% endfor %}
+                    </td>
+                    <td>₱{{ transaction.total }}</td>
+                    <td>{{ transaction.payment }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="5">No transactions today.</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="bottom-bar">
+            <a href="{% url 'dashboard_page' %}" class="back-btn">←</a>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

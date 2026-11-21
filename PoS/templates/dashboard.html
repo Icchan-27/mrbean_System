@@ -1,0 +1,194 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sales Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
+  </head>
+  <body>
+    <div class="page">
+      <nav class="topbar">
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="logout-btn">Logout</button>
+        </form>
+
+        <div class="nav-center">
+          <a href="{% url 'menu_page' %}">Menu</a>
+          <a href="{% url 'dashboard_page' %}" class="active">Sales</a>
+          <a href="{% url 'staff_inventory' %}">Inventory</a>
+        </div>
+      </nav>
+
+      <main class="dashboard-layout">
+        <section class="chart-card">
+          <h2>Sales per product</h2>
+
+          <div class="donut-wrap">
+            <div class="donut-chart" id="donutChart">
+              <div class="donut-hole"></div>
+            </div>
+          </div>
+
+          <div class="donut-tooltip" id="donutTooltip">Hover a slice</div>
+        </section>
+
+        <section class="stat-card total-sales-card">
+          <h3>Total Sales</h3>
+          <p id="totalSales">₱{{ total_sales }}</p>
+        </section>
+
+        <section class="stat-card orders-card">
+          <h3>Orders Today</h3>
+          <p id="ordersToday">{{ orders_today }}</p>
+        </section>
+
+        <section class="stat-card top-item-card">
+          <h3>Top Item</h3>
+          <p id="topItem">{{ top_item }}</p>
+        </section>
+
+        <a href="{% url 'dashboard2_page' %}" class="arrow-btn right-arrow"
+          >→</a
+        >
+      </main>
+    </div>
+
+    <script>
+      const donutChart = document.getElementById("donutChart");
+      const donutTooltip = document.getElementById("donutTooltip");
+      const totalSalesEl = document.getElementById("totalSales");
+      const ordersTodayEl = document.getElementById("ordersToday");
+      const topItemEl = document.getElementById("topItem");
+
+      const rawData = JSON.parse('{{ product_sales|escapejs }}');
+
+      const colors = [
+        "#67c9cf",
+        "#48abc6",
+        "#378db9",
+        "#2f6ea5",
+        "#5bc0be",
+        "#7bd389",
+        "#f4a261",
+        "#e76f51",
+        "#8ecae6",
+        "#219ebc"
+      ];
+
+      function formatPeso(value) {
+        return "₱" + Number(value).toLocaleString();
+      }
+
+      function buildDonutData(data) {
+        const totalAmount = data.reduce((sum, item) => sum + Number(item.amount), 0);
+        let start = 0;
+
+        return data.map((item, index) => {
+          const percent = totalAmount > 0 ? (Number(item.amount) / totalAmount) * 100 : 0;
+
+          const donutItem = {
+            name: item.name,
+            sales: Number(item.sales),
+            amount: Number(item.amount),
+            percent: percent,
+            start: start,
+            end: start + percent,
+            color: colors[index % colors.length],
+          };
+
+          start += percent;
+          return donutItem;
+        });
+      }
+
+      const donutData = buildDonutData(rawData);
+
+      function setDashboardStats() {
+        totalSalesEl.textContent = formatPeso({{ total_sales|default:0 }});
+        ordersTodayEl.textContent = {{ orders_today|default:0 }};
+        topItemEl.textContent = "{{ top_item|default:'-' }}";
+      }
+
+      function setDonutBackground() {
+        if (donutData.length === 0) {
+          donutChart.style.background = "#e5e5e5";
+          donutTooltip.textContent = "No sales today";
+          return;
+        }
+
+        const gradientParts = donutData.map((item) => {
+          return `${item.color} ${item.start}% ${item.end}%`;
+        });
+
+        donutChart.style.background = `conic-gradient(${gradientParts.join(", ")})`;
+      }
+
+      function getAngleFromCenter(x, y, rect) {
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        const dx = x - centerX;
+        const dy = y - centerY;
+
+        let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+        angle = (angle + 450) % 360;
+
+        return angle;
+      }
+
+      function getDistanceFromCenter(x, y, rect) {
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        const dx = x - centerX;
+        const dy = y - centerY;
+
+        return Math.sqrt(dx * dx + dy * dy);
+      }
+
+      donutChart.addEventListener("mousemove", function (e) {
+        if (donutData.length === 0) {
+          donutTooltip.textContent = "No sales today";
+          return;
+        }
+
+        const rect = donutChart.getBoundingClientRect();
+        const angle = getAngleFromCenter(e.clientX, e.clientY, rect);
+        const distance = getDistanceFromCenter(e.clientX, e.clientY, rect);
+
+        const outerRadius = rect.width / 2;
+        const innerRadius = rect.width / 4;
+
+        if (distance < innerRadius || distance > outerRadius) {
+          donutTooltip.textContent = "Hover a slice";
+          return;
+        }
+
+        const percentPosition = (angle / 360) * 100;
+
+        const hoveredItem = donutData.find(
+          (item) => percentPosition >= item.start && percentPosition < item.end
+        );
+
+        if (hoveredItem) {
+          donutTooltip.innerHTML = `
+            <strong>${hoveredItem.name}</strong><br>
+            Sales: ${hoveredItem.sales}<br>
+            Amount: ${formatPeso(hoveredItem.amount)}<br>
+            ${hoveredItem.percent.toFixed(1)}%
+          `;
+        }
+      });
+
+      donutChart.addEventListener("mouseleave", function () {
+        donutTooltip.textContent = donutData.length === 0 ? "No sales today" : "Hover a slice";
+      });
+
+      setDonutBackground();
+      setDashboardStats();
+    </script>
+  </body>
+</html>

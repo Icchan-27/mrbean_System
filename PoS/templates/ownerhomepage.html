@@ -1,0 +1,322 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sales Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/ownerhomepage.css' %}" />
+  </head>
+  <body>
+    <div class="page">
+      <nav class="topbar">
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="logout-btn">Logout</button>
+        </form>
+
+        <div class="nav-center">
+          <a href="#" class="active">Home Page</a>
+          <a href="{% url 'owner_menu' %}">Menu</a>
+          <a href="{% url 'owner_staff' %}">Staff</a>
+          <a href="{% url 'owner_inventory' %}">Inventory</a>
+        </div>
+      </nav>
+
+      <main class="dashboard-layout">
+        <section class="chart-card">
+          <div class="chart-top">
+            <h2>Sales per product</h2>
+
+            <select id="periodFilter" class="period-filter">
+              <option
+                value="today"
+                {%
+                if
+                period=""
+                ="today"
+                %}selected{%
+                endif
+                %}
+              >
+                Today
+              </option>
+              <option
+                value="weekly"
+                {%
+                if
+                period=""
+                ="weekly"
+                %}selected{%
+                endif
+                %}
+              >
+                This Week
+              </option>
+              <option
+                value="monthly"
+                {%
+                if
+                period=""
+                ="monthly"
+                %}selected{%
+                endif
+                %}
+              >
+                This Month
+              </option>
+              <option
+                value="yearly"
+                {%
+                if
+                period=""
+                ="yearly"
+                %}selected{%
+                endif
+                %}
+              >
+                This Year
+              </option>
+            </select>
+          </div>
+
+          {% if chart_type == "donut" %}
+          <div class="donut-wrap">
+            <div class="donut-chart" id="donutChart">
+              <div class="donut-hole"></div>
+            </div>
+          </div>
+
+          <div class="donut-tooltip" id="donutTooltip">Hover a slice</div>
+          {% else %}
+          <div class="line-wrap">
+            <canvas id="salesLineChart"></canvas>
+          </div>
+
+          <div class="product-summary">
+            <h4>Products Sold</h4>
+            <div class="product-summary-list">
+              {% for item in product_sales_list %}
+              <div class="product-summary-row">
+                <span>{{ item.name }}</span>
+                <span>{{ item.sales }} sold</span>
+              </div>
+              {% empty %}
+              <div class="product-summary-row">
+                <span>No sales data</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+        </section>
+
+        <section class="stat-card total-sales-card">
+          <h3>Total Sales</h3>
+          <p id="totalSales">₱{{ total_sales }}</p>
+          <span class="stat-period">{{ period_label }}</span>
+        </section>
+
+        <section class="stat-card orders-card">
+          <h3>Orders</h3>
+          <p id="ordersCount">{{ orders_count }}</p>
+          <span class="stat-period">{{ period_label }}</span>
+        </section>
+
+        <section class="stat-card top-item-card">
+          <h3>Top Item</h3>
+          <p id="topItem">{{ top_item }}</p>
+          <span class="stat-period">{{ period_label }}</span>
+        </section>
+
+        <a href="{% url 'owner_sales_history' %}" class="arrow-btn right-arrow"
+          >→</a
+        >
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      const periodFilter = document.getElementById("periodFilter");
+
+      const currentParams = new URLSearchParams(window.location.search);
+      const currentPeriod = currentParams.get("period") || "today";
+      periodFilter.value = currentPeriod;
+
+      periodFilter.addEventListener("change", function () {
+        const url = new URL(window.location.href);
+        url.searchParams.set("period", this.value);
+        window.location.href = url.pathname + url.search;
+      });
+
+      const chartType = "{{ chart_type }}";
+
+      if (chartType === "donut") {
+        const donutChart = document.getElementById("donutChart");
+        const donutTooltip = document.getElementById("donutTooltip");
+        const rawData = JSON.parse("{{ product_sales|escapejs }}");
+
+        const colors = [
+          "#67c9cf",
+          "#48abc6",
+          "#378db9",
+          "#2f6ea5",
+          "#5bc0be",
+          "#7bd389",
+          "#f4a261",
+          "#e76f51",
+          "#8ecae6",
+          "#219ebc",
+        ];
+
+        function formatPeso(value) {
+          return "₱" + Number(value).toLocaleString();
+        }
+
+        function buildDonutData(data) {
+          const totalAmount = data.reduce(
+            (sum, item) => sum + Number(item.amount),
+            0,
+          );
+          let start = 0;
+
+          return data.map((item, index) => {
+            const percent =
+              totalAmount > 0 ? (Number(item.amount) / totalAmount) * 100 : 0;
+
+            const donutItem = {
+              name: item.name,
+              sales: Number(item.sales),
+              amount: Number(item.amount),
+              percent: percent,
+              start: start,
+              end: start + percent,
+              color: colors[index % colors.length],
+            };
+
+            start += percent;
+            return donutItem;
+          });
+        }
+
+        const donutData = buildDonutData(rawData);
+
+        function setDonutBackground() {
+          if (donutData.length === 0) {
+            donutChart.style.background = "#e5e5e5";
+            donutTooltip.textContent = "No sales data";
+            return;
+          }
+
+          const gradientParts = donutData.map((item) => {
+            return `${item.color} ${item.start}% ${item.end}%`;
+          });
+
+          donutChart.style.background = `conic-gradient(${gradientParts.join(", ")})`;
+        }
+
+        function getAngleFromCenter(x, y, rect) {
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+
+          const dx = x - centerX;
+          const dy = y - centerY;
+
+          let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+          angle = (angle + 450) % 360;
+
+          return angle;
+        }
+
+        function getDistanceFromCenter(x, y, rect) {
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+
+          const dx = x - centerX;
+          const dy = y - centerY;
+
+          return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        donutChart.addEventListener("mousemove", function (e) {
+          if (donutData.length === 0) {
+            donutTooltip.textContent = "No sales data";
+            return;
+          }
+
+          const rect = donutChart.getBoundingClientRect();
+          const angle = getAngleFromCenter(e.clientX, e.clientY, rect);
+          const distance = getDistanceFromCenter(e.clientX, e.clientY, rect);
+
+          const outerRadius = rect.width / 2;
+          const innerRadius = rect.width / 4;
+
+          if (distance < innerRadius || distance > outerRadius) {
+            donutTooltip.textContent = "Hover a slice";
+            return;
+          }
+
+          const percentPosition = (angle / 360) * 100;
+
+          const hoveredItem = donutData.find(
+            (item) =>
+              percentPosition >= item.start && percentPosition < item.end,
+          );
+
+          if (hoveredItem) {
+            donutTooltip.innerHTML = `
+              <strong>${hoveredItem.name}</strong><br>
+              Sales: ${hoveredItem.sales}<br>
+              Amount: ${formatPeso(hoveredItem.amount)}<br>
+              ${hoveredItem.percent.toFixed(1)}%
+            `;
+          }
+        });
+
+        donutChart.addEventListener("mouseleave", function () {
+          donutTooltip.textContent =
+            donutData.length === 0 ? "No sales data" : "Hover a slice";
+        });
+
+        setDonutBackground();
+      }
+
+      if (chartType === "line") {
+        const ctx = document.getElementById("salesLineChart");
+        const labels = JSON.parse("{{ line_labels|escapejs }}");
+        const values = JSON.parse("{{ line_values|escapejs }}");
+
+        new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Sales",
+                data: values,
+                fill: false,
+                tension: 0.3,
+                borderWidth: 3,
+                pointRadius: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+      }
+    </script>
+  </body>
+</html>

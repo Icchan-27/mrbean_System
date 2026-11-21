@@ -1,0 +1,265 @@
+body {
+  margin: 0;
+  background: #d9d9dd;
+  font-family: Georgia, serif;
+  color: #442315;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.page {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  margin: 0;
+  background: #f7f4ea;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 64px;
+  background: #f2c48f;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #9d8b75;
+  padding: 0 30px;
+  flex-shrink: 0;
+}
+
+.topbar form {
+  margin: 0;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #442315;
+  font-size: 1.05rem;
+  font-family: Georgia, serif;
+}
+
+.nav-center {
+  display: flex;
+  align-items: center;
+  gap: 70px;
+}
+
+.nav-center a {
+  text-decoration: none;
+  color: #442315;
+  font-size: 1.1rem;
+  transition: opacity 0.2s ease;
+}
+
+.nav-center a:hover,
+.nav-center a.active {
+  opacity: 0.7;
+}
+
+.main-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.staff-panel {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.staff-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  max-width: 320px;
+}
+
+.search-box input {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #8f826f;
+  background: #f7f4ea;
+  padding: 0 38px 0 12px;
+  font-size: 0.95rem;
+  font-family: Georgia, serif;
+  color: #442315;
+  outline: none;
+}
+
+.search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  color: #442315;
+  pointer-events: none;
+}
+
+.add-btn,
+.remove-top-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #8f826f;
+  background: #f2c48f;
+  color: #442315;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  font-family: Georgia, serif;
+  flex-shrink: 0;
+}
+
+.add-btn:hover,
+.remove-top-btn:hover {
+  background: #eab373;
+}
+
+.remove-top-btn {
+  font-size: 1.4rem;
+}
+
+.add-staff-card,
+.remove-staff-card {
+  display: none;
+  border: 1px solid #9d8b75;
+  background: #f7f4ea;
+  padding: 14px;
+  margin-bottom: 18px;
+}
+
+.add-staff-card.show,
+.remove-staff-card.show {
+  display: block;
+}
+
+.add-staff-card input,
+.add-staff-card select,
+.remove-staff-card select {
+  width: 100%;
+  height: 36px;
+  margin-bottom: 10px;
+  border: 1px solid #8f826f;
+  background: #fffdf8;
+  padding: 0 10px;
+  font-size: 0.95rem;
+  font-family: Georgia, serif;
+  color: #442315;
+  outline: none;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.card-actions button {
+  border: 1px solid #8f826f;
+  background: #f2c48f;
+  color: #442315;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-family: Georgia, serif;
+}
+
+.card-actions button:hover {
+  background: #eab373;
+}
+
+.staff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 18px;
+}
+
+.staff-card {
+  border: 1px solid #9d8b75;
+  background: #f7f4ea;
+  padding: 12px;
+  text-align: center;
+  font-family: Georgia, serif;
+  color: #442315;
+}
+
+.staff-avatar {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #d98c3b;
+  margin-bottom: 10px;
+  border: 1px solid #9d8b75;
+}
+
+.staff-name,
+.staff-role {
+  margin: 0;
+}
+
+.staff-name {
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.staff-role {
+  font-size: 0.92rem;
+}
+
+.empty-text {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+  body {
+    overflow: auto;
+  }
+
+  .page {
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    height: auto;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .nav-center {
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .staff-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+
+  .staff-top {
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    max-width: 100%;
+  }
+
+  .staff-panel {
+    padding: 18px;
+  }
+}

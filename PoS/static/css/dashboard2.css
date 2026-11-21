@@ -1,0 +1,169 @@
+body {
+  margin: 0;
+  background: #d9d9dd;
+  font-family: Georgia, serif;
+  color: #442315;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.page {
+  width: 100vw;
+  height: 100vh;
+  background: #f7f4ea;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 64px;
+  background: #f2c48f;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #9d8b75;
+  padding: 0 30px;
+  flex-shrink: 0;
+}
+
+.topbar form {
+  margin: 0;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #442315;
+  font-size: 1.05rem;
+  font-family: Georgia, serif;
+}
+
+.nav-center {
+  display: flex;
+  align-items: center;
+  gap: 70px;
+}
+
+.nav-center a {
+  text-decoration: none;
+  color: #442315;
+  font-size: 1.1rem;
+  transition: opacity 0.2s ease;
+}
+
+.nav-center a:hover,
+.nav-center a.active {
+  opacity: 0.7;
+}
+
+.history-layout {
+  flex: 1;
+  padding: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.history-card {
+  width: 100%;
+  height: 100%;
+  background: #f2c48f;
+  border: 3px solid #181511;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.history-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-top h2 {
+  margin: 0;
+  font-weight: normal;
+}
+
+.date-filter {
+  height: 34px;
+  border: 1px solid #8f826f;
+  background: #f7f4ea;
+  font-family: Georgia, serif;
+  padding: 0 8px;
+}
+
+.table-shell {
+  margin-top: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.history-table th,
+.history-table td {
+  border: 1px solid #181511;
+  border-radius: 16px;
+  padding: 12px;
+  text-align: center;
+  font-size: 0.95rem;
+  background: #f2c48f;
+}
+
+.table-body-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.details-cell {
+  text-align: left;
+}
+
+.details-cell span {
+  display: block;
+}
+
+.bottom-bar {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.back-btn {
+  text-decoration: none;
+  font-size: 2rem;
+  color: #ef8f39;
+}
+
+.today-label {
+  font-size: 0.95rem;
+  background: #f7f4ea;
+  border: 1px solid #8f826f;
+  padding: 6px 10px;
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    height: auto;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .nav-center {
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

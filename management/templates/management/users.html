@@ -1,0 +1,170 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Management Users</title>
+    <link rel="stylesheet" href="{% static 'management/users.css' %}" />
+  </head>
+  <body>
+    <div class="page">
+      <aside class="sidebar">
+        <div class="brand">Mr. Bean</div>
+
+        <nav class="sidebar-nav">
+          <a href="{% url 'management_dashboard' %}">Dashboard</a>
+          <a href="{% url 'management_users' %}" class="active">Users</a>
+          <a href="{% url 'management_menu' %}">Menu</a>
+          <a href="{% url 'management_inventory' %}">Inventory</a>
+          <a href="{% url 'management_sales' %}">Sales</a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <h1>Users</h1>
+            <p>Manage system users</p>
+          </div>
+
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">Logout</button>
+          </form>
+        </header>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Add User</h2>
+          </div>
+
+          <form
+            method="post"
+            action="{% url 'management_add_user' %}"
+            class="user-form"
+          >
+            {% csrf_token %}
+            <input
+              type="text"
+              name="username"
+              placeholder="Username"
+              required
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              required
+            />
+
+            <select name="role">
+              <option value="">Admin (No Role)</option>
+              <option value="owner">Owner</option>
+              <option value="cashier">Cashier</option>
+            </select>
+
+            <button type="submit">Add</button>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>User List</h2>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Edit</th>
+                  <th>Remove</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in users %}
+                <tr>
+                  <td>{{ user.id }}</td>
+                  <td>{{ user.username }}</td>
+                  <td>
+                    {% if user.userprofile %} 
+                        {% if user.userprofile.role == "owner" %}
+                            <span class="role-badge owner">Owner</span>
+                        {% else %}
+                            <span class="role-badge cashier">Cashier</span>
+                        {% endif %} 
+                    {% else %}
+                        <span class="role-badge admin">Admin</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      class="edit-btn"
+                      onclick="openEditModal('{{ user.id }}', '{{ user.username }}', '{% if user.userprofile %}{{ user.userprofile.role }}{% endif %}')"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                  <td>
+                    {% if user != request.user %}
+                    <form
+                      method="post"
+                      action="{% url 'management_remove_user' user.id %}"
+                    >
+                      {% csrf_token %}
+                      <button type="submit" class="remove-btn">Remove</button>
+                    </form>
+                    {% else %}
+                    <span class="self-label">You</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal" id="editModal">
+      <div class="modal-card">
+        <h3>Edit User</h3>
+
+        <form method="post" id="editForm">
+          {% csrf_token %}
+          <input type="text" name="username" id="editUsername" required />
+
+          <select name="role" id="editRole">
+            <option value="">Admin</option>
+            <option value="owner">Owner</option>
+            <option value="cashier">Cashier</option>
+          </select>
+
+          <div class="modal-actions">
+            <button type="button" onclick="closeEditModal()">Cancel</button>
+            <button type="submit">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      function openEditModal(id, username, role) {
+        document.getElementById("editModal").classList.add("show");
+        document.getElementById("editUsername").value = username;
+        document.getElementById("editRole").value = role || "";
+        document.getElementById("editForm").action =
+          `/management/users/edit/${id}/`;
+      }
+
+      function closeEditModal() {
+        document.getElementById("editModal").classList.remove("show");
+      }
+    </script>
+  </body>
+</html>

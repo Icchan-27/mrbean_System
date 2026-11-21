@@ -1,0 +1,169 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Owner Staff</title>
+    <link rel="stylesheet" href="{% static 'css/ownerStaff.css' %}" />
+  </head>
+  <body>
+    <div class="page">
+      <nav class="topbar">
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="logout-btn">Logout</button>
+        </form>
+
+        <div class="nav-center">
+          <a href="{% url 'owner_home' %}">Home Page</a>
+          <a href="{% url 'owner_menu' %}">Menu</a>
+          <a href="#" class="active">Staff</a>
+          <a href="{% url 'owner_inventory' %}">Inventory</a>
+        </div>
+      </nav>
+
+      <div class="main-content">
+        <section class="staff-panel">
+          <div class="staff-top">
+            <div class="search-box">
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Search staff..."
+              />
+              <span class="search-icon">⌕</span>
+            </div>
+
+            <button type="button" class="add-btn" id="openAddStaff">+</button>
+            <button type="button" class="remove-top-btn" id="openRemoveStaff">
+              ×
+            </button>
+          </div>
+
+          <div class="add-staff-card" id="addStaffCard">
+            <form method="post" action="{% url 'add_staff' %}">
+              {% csrf_token %}
+
+              <input
+                type="text"
+                name="username"
+                placeholder="Username"
+                required
+              />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                required
+              />
+
+              <select name="role" required>
+                <option value="">Select role</option>
+                <option value="cashier">Cashier</option>
+                <option value="owner">Owner</option>
+              </select>
+
+              <div class="card-actions">
+                <button type="button" id="cancelAddStaff">Cancel</button>
+                <button type="submit">Save</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="remove-staff-card" id="removeStaffCard">
+            <form id="removeStaffForm" method="post">
+              {% csrf_token %}
+
+              <select id="removeStaffSelect" required>
+                <option value="">Select staff to remove</option>
+                {% for staff in staffs %}
+                <option value="{% url 'remove_staff' staff.id %}">
+                  {{ staff.username }} - {{ staff.userprofile.role }}
+                </option>
+                {% endfor %}
+              </select>
+
+              <div class="card-actions">
+                <button type="button" id="cancelRemoveStaff">Cancel</button>
+                <button type="submit">Remove</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="staff-grid" id="staffGrid">
+            {% for staff in staffs %}
+            <div
+              class="staff-card"
+              data-name="{{ staff.username }}"
+              data-role="{{ staff.userprofile.role }}"
+            >
+              <div class="staff-avatar"></div>
+              <p class="staff-name">{{ staff.username }}</p>
+              <p class="staff-role">{{ staff.userprofile.role|title }}</p>
+            </div>
+            {% empty %}
+            <p class="empty-text">No staff found.</p>
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const openAddStaff = document.getElementById("openAddStaff");
+      const openRemoveStaff = document.getElementById("openRemoveStaff");
+      const addStaffCard = document.getElementById("addStaffCard");
+      const removeStaffCard = document.getElementById("removeStaffCard");
+      const cancelAddStaff = document.getElementById("cancelAddStaff");
+      const cancelRemoveStaff = document.getElementById("cancelRemoveStaff");
+      const removeStaffForm = document.getElementById("removeStaffForm");
+      const removeStaffSelect = document.getElementById("removeStaffSelect");
+      const searchInput = document.getElementById("searchInput");
+      const staffGrid = document.getElementById("staffGrid");
+
+      openAddStaff.onclick = () => {
+        addStaffCard.classList.toggle("show");
+        removeStaffCard.classList.remove("show");
+      };
+
+      openRemoveStaff.onclick = () => {
+        removeStaffCard.classList.toggle("show");
+        addStaffCard.classList.remove("show");
+      };
+
+      cancelAddStaff.onclick = () => addStaffCard.classList.remove("show");
+      cancelRemoveStaff.onclick = () =>
+        removeStaffCard.classList.remove("show");
+
+      removeStaffForm.addEventListener("submit", function (e) {
+        const selectedUrl = removeStaffSelect.value;
+
+        if (!selectedUrl) {
+          e.preventDefault();
+          return;
+        }
+
+        if (!confirm("Remove this staff account?")) {
+          e.preventDefault();
+          return;
+        }
+
+        removeStaffForm.action = selectedUrl;
+      });
+
+      searchInput.addEventListener("input", function () {
+        const keyword = this.value.toLowerCase();
+        const cards = staffGrid.querySelectorAll(".staff-card");
+
+        cards.forEach((card) => {
+          const name = card.dataset.name.toLowerCase();
+          const role = card.dataset.role.toLowerCase();
+
+          card.style.display =
+            name.includes(keyword) || role.includes(keyword) ? "block" : "none";
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,70 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mr. Bean Inventory</title>
+    <link rel="stylesheet" href="{% static 'css/ownerInventory.css' %}" />
+  </head>
+
+  <body>
+    <div class="page">
+      <nav class="topbar">
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="logout-btn">Logout</button>
+        </form>
+
+        <div class="nav-center">
+          <a href="{% url 'menu_page' %}">Menu</a>
+          <a href="{% url 'dashboard_page' %}">Sales</a>
+          <a href="#" class="active">Inventory</a>
+        </div>
+      </nav>
+
+      <div class="main-content">
+        <section class="inventory-panel">
+          <div class="menu-top">
+            <div class="search-box">
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Search inventory..."
+              />
+              <span class="search-icon">⌕</span>
+            </div>
+          </div>
+
+          <div class="inventory-grid" id="inventoryGrid">
+            {% for inv in inventories %}
+            <div class="inventory-card" data-name="{{ inv.item.name }}">
+              <div class="inventory-image"></div>
+              <p class="inventory-name">{{ inv.item.name }}</p>
+              <p class="inventory-quantity">
+                {{ inv.quantity }} {{ inv.item.unit }}
+              </p>
+            </div>
+            {% empty %}
+            <p class="empty-message">No inventory items found.</p>
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const searchInput = document.getElementById("searchInput");
+      const cards = document.querySelectorAll(".inventory-card");
+
+      searchInput.addEventListener("input", function () {
+        const keyword = this.value.toLowerCase();
+
+        cards.forEach((card) => {
+          const name = card.dataset.name.toLowerCase();
+          card.style.display = name.includes(keyword) ? "block" : "none";
+        });
+      });
+    </script>
+  </body>
+</html>
